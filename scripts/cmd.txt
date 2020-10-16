@@ -1,0 +1,7 @@
+python register.py --moving /private/voxelmorph/processed_data/test_npz/A002323123_nii.npz --fixed /private/voxelmorph/processed_data/train_npz/A002300265_nii.npz --moved /private/voxelmorph/processed_data/output/A002323123_niimoved.npz --warp /private/voxelmorph/processed_data/output/A002323123_niiwarp.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney/0020.pt
+python register.py --moving /private/voxelmorph/processed_data/train_npz/A002300265_nii.npz --fixed /private/voxelmorph/processed_data/test_npz/A002323123_nii.npz --moved /private/voxelmorph/processed_data/output/A002300265_niimoved.npz --warp /private/voxelmorph/processed_data/output/A002300265_niiwarp.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney/0020.pt
+
+python register.py --moving /private/voxelmorph/processed_data/test/A002323123_nii/labels_1.nii.gz --fixed /private/voxelmorph/processed_data/train/A002300265_nii/labels_1.nii.gz --moved /private/voxelmorph/processed_data/output/A002323123_niimoved.nii.gz --warp /private/voxelmorph/processed_data/output/A002323123_niiwarp.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney/0020.pt
+
+
+python train.py /private/voxelmorph/processed_data/train_npz --atlas /private/voxelmorph/processed_data/train_npz/A002300265_nii.npz --model-dir /private/voxelmorph/processed_data/models/kidney.pth  --epochs 20

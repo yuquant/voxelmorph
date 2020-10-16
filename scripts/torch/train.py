@@ -28,7 +28,7 @@ import voxelmorph as vxm
 parser = argparse.ArgumentParser()
 
 # data organization parameters
-parser.add_argument('datadir', help='base data directory')
+parser.add_argument('--datadir', help='base data directory')
 parser.add_argument('--atlas', help='atlas filename (default: data/atlas_norm.npz)')
 parser.add_argument('--model-dir', default='models', help='model output directory (default: models)')
 parser.add_argument('--multichannel', action='store_true', help='specify that data has multiple channels')
@@ -55,10 +55,16 @@ parser.add_argument('--image-loss', default='mse', help='image reconstruction lo
 parser.add_argument('--lambda', type=float, dest='weight', default=0.01, help='weight of deformation loss (default: 0.01)')
 args = parser.parse_args()
 
+# 默认参数
+args.datadir = '/private/voxelmorph/processed_data/train_nii'
+# args.atlas = '/private/voxelmorph/processed_data/train_npz/A002300265_nii.npz'
+args.model_dir = '/private/voxelmorph/processed_data/models/kidney'
+args.epochs = 20
+
 bidir = args.bidir
 
 # load and prepare training data
-train_vol_names = glob.glob(os.path.join(args.datadir, '*.npz'))
+train_vol_names = glob.glob(os.path.join(args.datadir, '*.nii.gz'))
 random.shuffle(train_vol_names)  # shuffle volume list
 assert len(train_vol_names) > 0, 'Could not find any training data'
 
@@ -151,8 +157,8 @@ for epoch in range(args.initial_epoch, args.epochs):
 
         # generate inputs (and true outputs) and convert them to tensors
         inputs, y_true = next(generator)
-        inputs = [torch.from_numpy(d).to(device).float().permute(0, 4, 1, 2, 3) for d in inputs]
-        y_true = [torch.from_numpy(d).to(device).float().permute(0, 4, 1, 2, 3) for d in y_true]
+        inputs = [torch.from_numpy(d.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3) for d in inputs]
+        y_true = [torch.from_numpy(d.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3) for d in y_true]
 
         # run inputs through the model to produce a warped image and flow field
         y_pred = model(*inputs)
