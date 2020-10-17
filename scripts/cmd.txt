@@ -5,3 +5,6 @@ python register.py --moving /private/voxelmorph/processed_data/test/A002323123_n
 
 
 python train.py /private/voxelmorph/processed_data/train_npz --atlas /private/voxelmorph/processed_data/train_npz/A002300265_nii.npz --model-dir /private/voxelmorph/processed_data/models/kidney.pth  --epochs 20
+
+
+python register.py --moving /private/voxelmorph/processed_data/output/labels_1.nii.gz --fixed /private/voxelmorph/processed_data/output/labels_2.nii.gz --moved /private/voxelmorph/processed_data/output/1to2moved.nii.gz --warp /private/voxelmorph/processed_data/output/1to2warp.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney/0020.pt
