@@ -32,6 +32,7 @@ parser.add_argument('--datadir', help='base data directory')
 parser.add_argument('--atlas', help='atlas filename (default: data/atlas_norm.npz)')
 parser.add_argument('--model-dir', default='models', help='model output directory (default: models)')
 parser.add_argument('--multichannel', action='store_true', help='specify that data has multiple channels')
+parser.add_argument('--regex', default='*.nii.gz', help='suffix of file')
 
 # training parameters
 parser.add_argument('--gpu', default='0', help='GPU ID number(s), comma-separated (default: 0)')
@@ -56,16 +57,16 @@ parser.add_argument('--lambda', type=float, dest='weight', default=0.01, help='w
 args = parser.parse_args()
 
 # 默认参数
-args.datadir = '/private/voxelmorph/processed_data/2dlabels'
-# # args.atlas = '/private/voxelmorph/processed_data/train_npz/A002300265_nii.npz'
-args.model_dir = '/private/voxelmorph/processed_data/models/chest'
-args.epochs = 200
+# args.datadir = '/private/voxelmorph/processed_data/chest_train_images_npz_norm'
+# args.model_dir = '/private/voxelmorph/processed_data/models/chest_image'
+# args.epochs = 200
+# args.regex = '*.npz'
 # args.image_loss = 'dice'
 
 bidir = args.bidir
-
+print(args.regex)
 # load and prepare training data
-train_vol_names = glob.glob(os.path.join(args.datadir, '*.nii.gz'))
+train_vol_names = glob.glob(os.path.join(args.datadir, args.regex))
 random.shuffle(train_vol_names)  # shuffle volume list
 assert len(train_vol_names) > 0, 'Could not find any training data'
 

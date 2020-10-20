@@ -17,4 +17,20 @@ python register.py --moving /private/voxelmorph/processed_data/output/labels_1.n
 
 
 python train.py --datadir /private/voxelmorph/processed_data/2dlabels --model-dir /private/voxelmorph/processed_data/models/chest  --epochs 50 --bidir
-python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-7.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-1-7.nii.gz --warp /private/voxelmorph/processed_data/output/chest1to7warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest/0200.pt
+python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-30.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.nii.gz --warp /private/voxelmorph/processed_data/output/chest30to1warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest/0200.pt
+
+# train chest images
+python train.py --datadir /private/voxelmorph/processed_data/chest_train_images_npz_norm --model-dir /private/voxelmorph/processed_data/models/chest_image  --epochs 200 --bidir --regex *.npz  --lr 0.00001
+python register.py --moving /private/voxelmorph/processed_data/output/a001Normal0-images_1-30.npz --fixed /private/voxelmorph/processed_data/output/a001Normal0-images_1-1.npz --moved /private/voxelmorph/processed_data/output/a001Normal0-images_1-30to1.npz --warp /private/voxelmorph/processed_data/output/chest_image_30to1_warp.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_image/0200.pt
+
+
+# train chest labels norm
+# not good
+python train.py --datadir /private/voxelmorph/processed_data/chest_train_images_npz_norm --model-dir /private/voxelmorph/processed_data/models/chest_label_norm  --epochs 200 --bidir --regex *.npz  --lr 0.00001
+python register.py --moving /private/voxelmorph/processed_data/output/a001Normal0-labels__1__alone-30.npz --fixed /private/voxelmorph/processed_data/output/a001Normal0-labels__1__alone-1.npz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.npz --warp /private/voxelmorph/processed_data/output/chest_label_30to1warp_norm.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_label_norm/0200.pt
+
+
+# train chest images and larger weights
+python train.py --datadir /private/voxelmorph/processed_data/chest_train_images_npz_norm --model-dir /private/voxelmorph/processed_data/models/chest_image  --epochs 200 --bidir --regex *.npz  --lr 0.00001  --enc 64 128 256 512 --dec 1024 512 256 128 64
+python register.py --moving /private/voxelmorph/processed_data/output/a001Normal0-images_1-30.npz --fixed /private/voxelmorph/processed_data/output/a001Normal0-images_1-1.npz --moved /private/voxelmorph/processed_data/output/a001Normal0-images_1-30to1.npz --warp /private/voxelmorph/processed_data/output/chest_image_30to1_warp.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_image/0200.pt
+
