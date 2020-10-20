@@ -52,9 +52,12 @@ model.to(device)
 model.eval()
 
 # set up tensors and permute
-input_moving = torch.from_numpy(moving.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3)
-input_fixed = torch.from_numpy(fixed.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3)
-
+if moving.ndim == 5:
+    input_moving = torch.from_numpy(moving.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3)
+    input_fixed = torch.from_numpy(fixed.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3)
+elif moving.ndim == 4:
+    input_moving = torch.from_numpy(moving.astype(np.float32)).to(device).float().permute(0, 3, 1, 2)
+    input_fixed = torch.from_numpy(fixed.astype(np.float32)).to(device).float().permute(0, 3, 1, 2)
 # predict
 moved, warp = model(input_moving, input_fixed, registration=True)
 

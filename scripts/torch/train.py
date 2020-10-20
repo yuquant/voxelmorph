@@ -56,10 +56,11 @@ parser.add_argument('--lambda', type=float, dest='weight', default=0.01, help='w
 args = parser.parse_args()
 
 # 默认参数
-args.datadir = '/private/voxelmorph/processed_data/train_nii'
-# args.atlas = '/private/voxelmorph/processed_data/train_npz/A002300265_nii.npz'
-args.model_dir = '/private/voxelmorph/processed_data/models/kidney'
-args.epochs = 20
+args.datadir = '/private/voxelmorph/processed_data/2dlabels'
+# # args.atlas = '/private/voxelmorph/processed_data/train_npz/A002300265_nii.npz'
+args.model_dir = '/private/voxelmorph/processed_data/models/chest'
+args.epochs = 200
+# args.image_loss = 'dice'
 
 bidir = args.bidir
 
@@ -130,6 +131,8 @@ if args.image_loss == 'ncc':
     image_loss_func = vxm.losses.NCC().loss
 elif args.image_loss == 'mse':
     image_loss_func = vxm.losses.MSE().loss
+# elif args.image_loss == 'dice':
+#     image_loss_func = vxm.losses.Dice().loss
 else:
     raise ValueError('Image loss should be "mse" or "ncc", but found "%s"' % args.image_loss)
 
@@ -157,8 +160,12 @@ for epoch in range(args.initial_epoch, args.epochs):
 
         # generate inputs (and true outputs) and convert them to tensors
         inputs, y_true = next(generator)
-        inputs = [torch.from_numpy(d.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3) for d in inputs]
-        y_true = [torch.from_numpy(d.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3) for d in y_true]
+        if len(inshape) == 3:
+            inputs = [torch.from_numpy(d.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3) for d in inputs]
+            y_true = [torch.from_numpy(d.astype(np.float32)).to(device).float().permute(0, 4, 1, 2, 3) for d in y_true]
+        elif len(inshape) == 2:
+            inputs = [torch.from_numpy(d.astype(np.float32)).to(device).float().permute(0, 3, 1, 2) for d in inputs]
+            y_true = [torch.from_numpy(d.astype(np.float32)).to(device).float().permute(0, 3, 1, 2) for d in y_true]
 
         # run inputs through the model to produce a warped image and flow field
         y_pred = model(*inputs)

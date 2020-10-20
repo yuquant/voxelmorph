@@ -3,8 +3,18 @@ python register.py --moving /private/voxelmorph/processed_data/train_npz/A002300
 
 python register.py --moving /private/voxelmorph/processed_data/test/A002323123_nii/labels_1.nii.gz --fixed /private/voxelmorph/processed_data/train/A002300265_nii/labels_1.nii.gz --moved /private/voxelmorph/processed_data/output/A002323123_niimoved.nii.gz --warp /private/voxelmorph/processed_data/output/A002323123_niiwarp.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney/0020.pt
 
-
 python train.py /private/voxelmorph/processed_data/train_npz --atlas /private/voxelmorph/processed_data/train_npz/A002300265_nii.npz --model-dir /private/voxelmorph/processed_data/models/kidney.pth  --epochs 20
 
-
 python register.py --moving /private/voxelmorph/processed_data/output/labels_1.nii.gz --fixed /private/voxelmorph/processed_data/output/labels_2.nii.gz --moved /private/voxelmorph/processed_data/output/1to2moved.nii.gz --warp /private/voxelmorph/processed_data/output/1to2warp.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney/0020.pt
+
+
+python train.py --datadir /private/voxelmorph/processed_data/train_image_nii --model-dir /private/voxelmorph/processed_data/models/kidney_image  --epochs 50
+python register.py --moving /private/voxelmorph/processed_data/output/images_1.nii.gz --fixed /private/voxelmorph/processed_data/output/images_2.nii.gz --moved /private/voxelmorph/processed_data/output/images1to2moved.nii.gz --warp /private/voxelmorph/processed_data/output/1to2warp.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney_image/0020.pt
+
+
+python train.py --datadir /private/voxelmorph/processed_data/train_nii --model-dir /private/voxelmorph/processed_data/models/kidney_bidir  --epochs 50 --bidir
+python register.py --moving /private/voxelmorph/processed_data/output/labels_1.nii.gz --fixed /private/voxelmorph/processed_data/output/labels_2.nii.gz --moved /private/voxelmorph/processed_data/output/1to2moved_bi.nii.gz --warp /private/voxelmorph/processed_data/output/1to2warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney_bidir/0050.pt
+
+
+python train.py --datadir /private/voxelmorph/processed_data/2dlabels --model-dir /private/voxelmorph/processed_data/models/chest  --epochs 50 --bidir
+python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-7.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-1-7.nii.gz --warp /private/voxelmorph/processed_data/output/chest1to7warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest/0200.pt
