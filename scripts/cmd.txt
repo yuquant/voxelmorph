@@ -31,6 +31,7 @@ python register.py --moving /private/voxelmorph/processed_data/output/a001Normal
 
 
 # train chest images and larger weights
+# no improvement
 python train.py --datadir /private/voxelmorph/processed_data/chest_train_images_npz_norm --model-dir /private/voxelmorph/processed_data/models/chest_image  --epochs 200 --bidir --regex *.npz  --lr 0.00001  --enc 64 128 256 512 --dec 1024 512 256 128 64
 python register.py --moving /private/voxelmorph/processed_data/output/a001Normal0-images_1-30.npz --fixed /private/voxelmorph/processed_data/output/a001Normal0-images_1-1.npz --moved /private/voxelmorph/processed_data/output/a001Normal0-images_1-30to1.npz --warp /private/voxelmorph/processed_data/output/chest_image_30to1_warp.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_image/0200.pt
 

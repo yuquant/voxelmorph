@@ -213,57 +213,6 @@ class VxmDense(LoadableModel):
         else:
             return y_source, pos_flow
 
-from smartimage.models.classify_3d.auto_vgg import Features
-
-class MySTN3D(nn.Module):
-    def __init__(self, inshape):
-        super().__init__()
-        self.conv2_drop = nn.Dropout3d()
-
-        # Spatial transformer localization-network
-        self.localization = Features(input_size=inshape, input_channel=2, conv_cfg=[16, "M", 16])
-
-        # Regressor for the 3 * 2 affine matrix
-        self.fc_loc = nn.Sequential(
-            nn.Linear(self.localization.output_features_number, 64),
-            nn.ReLU(True),
-            nn.Linear(64, 2 * 3)
-        )
-
-        # Initialize the weights/bias with identity transformation
-        self.fc_loc[2].weight.data.zero_()
-        self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 1, 0], dtype=torch.float))
-        # self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0], dtype=torch.float))
-
-    # Spatial transformer network forward function
-    def stn(self, label_model, label_target):
-        x = torch.cat((label_model, label_target), dim=1)
-        xs = self.localization(x)
-        xs = xs.view(-1, self.localization.output_features_number)
-        theta = self.fc_loc(xs)
-        theta = theta.view(-1, 2, 3)
-
-
-        # x = F.grid_sample(x, grid)
-
-        return theta
-
-    def forward(self, label_model, label_target):
-        # transform the input
-        theta = self.stn(label_model, label_target)
-        grid = F.affine_grid(theta, label_target.size())
-
-        x = F.grid_sample(label_model, grid)
-        # # Perform the usual forward pass
-        # x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        # x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        # x = x.view(-1, 320)
-        # x = F.relu(self.fc1(x))
-        x = F.dropout(x, p=0.3, training=self.training)
-        # x = self.fc2(x)
-        return x
-
-
 
 class ConvBlock(nn.Module):
     """
@@ -281,3 +230,72 @@ class ConvBlock(nn.Module):
         out = self.main(x)
         out = self.activation(out)
         return out
+
+
+from smartimage.models.classify_3d.auto_vgg import Features
+
+
+class MySTN2d(nn.Module):
+    def __init__(self,
+                 inshape,
+                 conv_cfg=None,
+                 hidden_unit_num=None,
+                 ):
+        super().__init__()
+        self.conv2_drop = nn.Dropout2d()
+        if not conv_cfg:
+            conv_cfg = [16, "M", 16]
+
+        if not hidden_unit_num:
+            hidden_unit_num = 64
+        # Spatial transformer localization-network
+        self.localization = Features(input_size=inshape, input_channel=2, conv_cfg=conv_cfg)
+
+        # Regressor for the 3 * 2 affine matrix
+        self.fc_loc = nn.Sequential(
+            nn.Linear(self.localization.output_features_number, hidden_unit_num),
+            nn.ReLU(True),
+            nn.Linear(hidden_unit_num, 2 * 3)
+        )
+
+        # Initialize the weights/bias with identity transformation
+        self.fc_loc[2].weight.data.zero_()
+        self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 1, 0], dtype=torch.float))
+        # self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0], dtype=torch.float))
+
+    # Spatial transformer network forward function
+    def stn(self, moving, fixed):
+        x = torch.cat((moving, fixed), dim=1)
+        xs = self.localization(x)
+        xs = xs.view(-1, self.localization.output_features_number)
+        theta = self.fc_loc(xs)
+        theta = theta.view(-1, 2, 3)
+        return theta
+
+    def forward(self, moving, fixed):
+        # transform the input
+        theta = self.stn(moving, fixed)
+        grid = F.affine_grid(theta, fixed.size())
+
+        x = F.grid_sample(moving, grid)
+        x = F.dropout(x, p=0.3, training=self.training)
+        return x
+
+
+class RigidNet(LoadableModel):
+    """
+    VoxelMorph network for (unsupervised) nonlinear registration between two images.
+    """
+
+    @store_config_args
+    def __init__(self,
+        inshape,
+        conv_cfg=None,
+        hidden_unit_num=None,
+        ):
+        super().__init__()
+        self.stn_net = MySTN2d(inshape=inshape, conv_cfg=conv_cfg, hidden_unit_num=hidden_unit_num)
+
+    def forward(self, source, target, registration=False):
+        # need to figure out dim transformation
+        pass
