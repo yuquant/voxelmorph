@@ -107,10 +107,10 @@ dec_nf = args.dec if args.dec else [32, 32, 32, 32, 32, 16, 16]
 
 if args.load_model:
     # load initial model (if specified)
-    model = torch.load('/private/medical-src2.x/ai-test/stn2.pth', map_location=device)
+    model = torch.load(args.load_model, map_location=device)
 else:
     # otherwise configure new model
-    model = MySTN(inshape=inshape).to(device)
+    model = MySTN(inshape=inshape, conv_cfg=[16, 32, 64, 'M', 128, 128, 'M', 64, 64, 'M',]).to(device)
 
 if nb_gpus > 1:
     # use multiple GPUs via DataParallel
@@ -181,7 +181,7 @@ for epoch in range(args.initial_epoch, args.epochs):
 
         # backpropagate and optimize
         optimizer.zero_grad()
-        loss.backward()
+        curr_loss.backward()
         optimizer.step()
 
         # print step info

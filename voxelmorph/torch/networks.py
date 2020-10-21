@@ -244,18 +244,20 @@ class MySTN2d(nn.Module):
         super().__init__()
         self.conv2_drop = nn.Dropout2d()
         if not conv_cfg:
-            conv_cfg = [8, 8, 8, 'M', 10, 10, 'M']
+            self.conv_cfg = [8, 8, 8, 'M', 10, 10, 'M']
+        else:
+            self.conv_cfg = conv_cfg
 
         if not hidden_unit_num:
-            hidden_unit_num = 64
+            self.hidden_unit_num = 64
         # Spatial transformer localization-network
-        self.localization = Features(input_size=inshape, input_channel=2, conv_cfg=conv_cfg)
+        self.localization = Features(input_size=inshape, input_channel=2, conv_cfg=self.conv_cfg)
         print('linear layer output_features_number', self.localization.output_features_number)
         # Regressor for the 3 * 2 affine matrix
         self.fc_loc = nn.Sequential(
-            nn.Linear(self.localization.output_features_number, hidden_unit_num),
+            nn.Linear(self.localization.output_features_number, self.hidden_unit_num),
             nn.ReLU(True),
-            nn.Linear(hidden_unit_num, 2 * 3)
+            nn.Linear(self.hidden_unit_num, 2 * 3)
         )
                 # Spatial transformer localization-network
         # self.localization = nn.Sequential(

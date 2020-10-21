@@ -51,28 +51,6 @@ plt.ion()  # interactive mode
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 from PIL import Image
-SCALE = 1
-IMAGE_SIZE = 28 * SCALE
-BATCH_SIZE = 128
-# Training dataset
-train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST(root='.', train=True, download=True,
-                   transform=transforms.Compose([
-                       transforms.RandomResizedCrop(size=28, scale=(0.5, 1), interpolation=Image.NEAREST),
-                       transforms.Resize(IMAGE_SIZE, interpolation=Image.NEAREST),
-                       transforms.ToTensor(),
-
-                       # transforms.Normalize((0.1307,), (0.3081,))
-                   ])), batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-# Test dataset
-test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST(root='.', train=False, transform=transforms.Compose([
-        transforms.RandomResizedCrop(size=28, scale=(0.5, 1), interpolation=Image.NEAREST),
-        transforms.Resize(IMAGE_SIZE, interpolation=Image.NEAREST),
-        transforms.ToTensor(),
-        # transforms.Normalize((0.1307,), (0.3081,))
-
-    ])), batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
 
 ######################################################################
@@ -116,22 +94,6 @@ def generate_num_pic(num, shape):
     ret = cv2.putText(ret, str(num), (3*SCALE, 25*SCALE), cv2.FONT_HERSHEY_SIMPLEX, 1*SCALE, (1,), 2*SCALE)
     # ret = cv2.putText(ret, str(num), (3, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (1,), 2)
     return ret
-
-
-SHAPE = (IMAGE_SIZE, IMAGE_SIZE)
-num_pic_dict = {
-    0: generate_num_pic(0, SHAPE),
-    1: generate_num_pic(1, SHAPE),
-    2: generate_num_pic(2, SHAPE),
-    3: generate_num_pic(3, SHAPE),
-    4: generate_num_pic(4, SHAPE),
-    5: generate_num_pic(5, SHAPE),
-    6: generate_num_pic(6, SHAPE),
-    7: generate_num_pic(7, SHAPE),
-    8: generate_num_pic(8, SHAPE),
-    9: generate_num_pic(9, SHAPE),
-
-}
 
 
 def show_num():
@@ -266,13 +228,55 @@ def visualize_stn():
 
 
 if __name__ == '__main__':
-    model = MySTN(inshape=SHAPE, conv_cfg=[8, 8, 8, 'M', 10, 10, 'M']).to(device)
+    # conv_cfg=[8, 8, 8, 'M', 10, 10, 'M']
+    conv_cfg = [16, 32, 'M', 64, 64, 'M', 32, 32, 'M', 8]
+
+    IMAGE_SIZE = 128
+    SCALE = int(IMAGE_SIZE/28)
+    SHAPE = (IMAGE_SIZE, IMAGE_SIZE)
+    BATCH_SIZE = 16
+    model = MySTN(inshape=SHAPE, conv_cfg=conv_cfg).to(device)
     optimizer = optim.SGD(model.parameters(), lr=0.001)
+
+    # Training dataset
+    train_loader = torch.utils.data.DataLoader(
+        datasets.MNIST(root='.', train=True, download=True,
+                       transform=transforms.Compose([
+                           transforms.RandomResizedCrop(size=28, scale=(0.5, 1), interpolation=Image.NEAREST),
+                           transforms.Resize(IMAGE_SIZE, interpolation=Image.NEAREST),
+                           transforms.ToTensor(),
+
+                           # transforms.Normalize((0.1307,), (0.3081,))
+                       ])), batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+    # Test dataset
+    test_loader = torch.utils.data.DataLoader(
+        datasets.MNIST(root='.', train=False, transform=transforms.Compose([
+            transforms.RandomResizedCrop(size=28, scale=(0.5, 1), interpolation=Image.NEAREST),
+            transforms.Resize(IMAGE_SIZE, interpolation=Image.NEAREST),
+            transforms.ToTensor(),
+            # transforms.Normalize((0.1307,), (0.3081,))
+
+        ])), batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+
     loss_func = DiceLoss2D()
-    for epoch in range(1, 100 + 1):
+    num_pic_dict = {
+        0: generate_num_pic(0, SHAPE),
+        1: generate_num_pic(1, SHAPE),
+        2: generate_num_pic(2, SHAPE),
+        3: generate_num_pic(3, SHAPE),
+        4: generate_num_pic(4, SHAPE),
+        5: generate_num_pic(5, SHAPE),
+        6: generate_num_pic(6, SHAPE),
+        7: generate_num_pic(7, SHAPE),
+        8: generate_num_pic(8, SHAPE),
+        9: generate_num_pic(9, SHAPE),
+
+    }
+
+    for epoch in range(1, 50 + 1):
         run_train(epoch)
         run_test()
-    torch.save(model, '/private/medical-src2.x/ai-test/stn2.pth')
+    torch.save(model, '/private/voxelmorph/processed_data/models/train_by_minist/size{}.pth'.format(IMAGE_SIZE))
     # Visualize the STN transformation on some input batch
     visualize_stn()
 
