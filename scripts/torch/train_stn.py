@@ -63,7 +63,7 @@ args.datadir = '/private/voxelmorph/processed_data/2dlabels'
 args.model_dir = '/private/voxelmorph/processed_data/models/chest_label_stn'
 args.epochs = 200
 args.regex = '*.nii.gz'
-# args.image_loss = 'dice'
+args.image_loss = 'dice'
 args.lr = 0.001
 
 bidir = args.bidir
@@ -171,10 +171,11 @@ for epoch in range(args.initial_epoch, args.epochs):
         # calculate total loss
         loss = 0
         loss_list = []
-        for n, loss_function in enumerate(losses):
-            curr_loss = loss_function(y_true[n], y_pred[n]) * weights[n]
-            loss_list.append('%.6f' % curr_loss.item())
-            loss += curr_loss
+        # for n, loss_function in enumerate(losses):
+            # curr_loss = loss_function(y_true[n], y_pred[n]) * weights[n]
+        curr_loss = losses[0](y_true[0], y_pred)
+        loss_list.append('%.6f' % curr_loss.item())
+        loss += curr_loss
 
         loss_info = 'loss: %.6f  (%s)' % (loss.item(), ', '.join(loss_list))
 

@@ -61,7 +61,7 @@ class Net(nn.Module):
 
 # IMAGE_SIZE = 28*3
 IMAGE_SIZE = 128
-
+from voxelmorph.torch.networks import MySTN2d as MySTN
 # class MySTN(nn.Module):
 #     def __init__(self):
 #         super(MySTN, self).__init__()
@@ -131,8 +131,8 @@ def grid_sample(image_arr_3d, grid_arr_4d):
     return output
 
 def predict(template, target):
-    # net = torch.load('/private/medical-src2.x/ai-test/stn2.pth', map_location='cpu')
-    net = torch.load('/private/voxelmorph/processed_data/models/chest_label_stn/0199.pt', map_location='cpu')
+    net = torch.load('/private/medical-src2.x/ai-test/stn2.pth', map_location='cpu')
+    # net = torch.load('/private/voxelmorph/processed_data/models/chest_label_stn/0129.pt', map_location='cpu')
     shape = target.shape
     tmp_template = cv2.resize(template, (IMAGE_SIZE, IMAGE_SIZE))
     target = cv2.resize(target, (IMAGE_SIZE, IMAGE_SIZE))
@@ -181,8 +181,8 @@ def main():
     # axarr[2].imshow(transformed_label)
     # axarr[2].set_title('transformed_label')
 
-    template = labels[4]
-    target = labels[5]
+    template = labels[30]
+    target = labels[2]
     transformed_label = predict(template, target)
     f, axarr = plt.subplots(1, 3)
     axarr[0].imshow(template)

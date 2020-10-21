@@ -244,19 +244,36 @@ class MySTN2d(nn.Module):
         super().__init__()
         self.conv2_drop = nn.Dropout2d()
         if not conv_cfg:
-            conv_cfg = [16, "M", 16]
+            conv_cfg = [8, 8, 8, 'M', 10, 10, 'M']
 
         if not hidden_unit_num:
             hidden_unit_num = 64
         # Spatial transformer localization-network
         self.localization = Features(input_size=inshape, input_channel=2, conv_cfg=conv_cfg)
-
+        print('linear layer output_features_number', self.localization.output_features_number)
         # Regressor for the 3 * 2 affine matrix
         self.fc_loc = nn.Sequential(
             nn.Linear(self.localization.output_features_number, hidden_unit_num),
             nn.ReLU(True),
             nn.Linear(hidden_unit_num, 2 * 3)
         )
+                # Spatial transformer localization-network
+        # self.localization = nn.Sequential(
+        #     nn.Conv2d(2, 8, kernel_size=7),
+        #     nn.MaxPool2d(2, stride=2),
+        #     nn.ReLU(True),
+        #     nn.Conv2d(8, 10, kernel_size=5),
+        #     nn.MaxPool2d(2, stride=2),
+        #     nn.ReLU(True)
+        # )
+        #
+        # # Regressor for the 3 * 2 affine matrix
+        # self.fc_loc = nn.Sequential(
+        #     nn.Linear(10 * 3 * 3, 32),
+        #     nn.ReLU(True),
+        #     nn.Linear(32, 3 * 2)
+        # )
+
 
         # Initialize the weights/bias with identity transformation
         self.fc_loc[2].weight.data.zero_()
@@ -268,6 +285,7 @@ class MySTN2d(nn.Module):
         x = torch.cat((moving, fixed), dim=1)
         xs = self.localization(x)
         xs = xs.view(-1, self.localization.output_features_number)
+        # xs = xs.view(-1, 10 * 3 * 3)
         theta = self.fc_loc(xs)
         theta = theta.view(-1, 2, 3)
         return theta

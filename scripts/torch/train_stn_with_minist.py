@@ -51,7 +51,9 @@ plt.ion()  # interactive mode
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 from PIL import Image
-IMAGE_SIZE = 28*3
+SCALE = 1
+IMAGE_SIZE = 28 * SCALE
+BATCH_SIZE = 128
 # Training dataset
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST(root='.', train=True, download=True,
@@ -61,7 +63,7 @@ train_loader = torch.utils.data.DataLoader(
                        transforms.ToTensor(),
 
                        # transforms.Normalize((0.1307,), (0.3081,))
-                   ])), batch_size=16, shuffle=True, num_workers=4)
+                   ])), batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 # Test dataset
 test_loader = torch.utils.data.DataLoader(
     datasets.MNIST(root='.', train=False, transform=transforms.Compose([
@@ -70,7 +72,7 @@ test_loader = torch.utils.data.DataLoader(
         transforms.ToTensor(),
         # transforms.Normalize((0.1307,), (0.3081,))
 
-    ])), batch_size=16, shuffle=True, num_workers=4)
+    ])), batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
 
 ######################################################################
@@ -96,59 +98,6 @@ test_loader = torch.utils.data.DataLoader(
 #
 
 
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv2_drop = nn.Dropout2d()
-
-        # Spatial transformer localization-network
-        self.localization = nn.Sequential(
-            nn.Conv2d(2, 8, kernel_size=7),
-            nn.MaxPool2d(2, stride=2),
-            nn.ReLU(True),
-            nn.Conv2d(8, 10, kernel_size=5),
-            nn.MaxPool2d(2, stride=2),
-            nn.ReLU(True)
-        )
-
-        # Regressor for the 3 * 2 affine matrix
-        self.fc_loc = nn.Sequential(
-            nn.Linear(10 * 3 * 3, 32),
-            nn.ReLU(True),
-            nn.Linear(32, 2 * 3)
-            # nn.Linear(32, 6 * 4)
-        )
-
-        # Initialize the weights/bias with identity transformation
-        self.fc_loc[2].weight.data.zero_()
-        self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 1, 0], dtype=torch.float))
-        # self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0], dtype=torch.float))
-
-    # Spatial transformer network forward function
-    def stn(self, label_model, label_target):
-        x = torch.cat((label_model, label_target), dim=1)
-        xs = self.localization(x)
-        xs = xs.view(-1, 10 * 3 * 3)
-        theta = self.fc_loc(xs)
-        theta = theta.view(-1, 2, 3)
-
-        grid = F.affine_grid(theta, x.size())
-        # x = F.grid_sample(x, grid)
-
-        return grid
-
-    def forward(self, label_model, label_target):
-        # transform the input
-        grid = self.stn(label_model, label_target)
-        x = F.grid_sample(label_model, grid)
-        # # Perform the usual forward pass
-        # x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        # x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        # x = x.view(-1, 320)
-        # x = F.relu(self.fc1(x))
-        x = F.dropout(x, p=0.3, training=self.training)
-        # x = self.fc2(x)
-        return x
 
 from voxelmorph.torch.networks import MySTN2d as MySTN
 ######################################################################
@@ -164,7 +113,8 @@ from matplotlib import pyplot as plt
 
 def generate_num_pic(num, shape):
     ret = np.zeros(shape, np.uint8)
-    ret = cv2.putText(ret, str(num), (3*3, 25*3), cv2.FONT_HERSHEY_SIMPLEX, 1*3, (1,), 2*3)
+    ret = cv2.putText(ret, str(num), (3*SCALE, 25*SCALE), cv2.FONT_HERSHEY_SIMPLEX, 1*SCALE, (1,), 2*SCALE)
+    # ret = cv2.putText(ret, str(num), (3, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (1,), 2)
     return ret
 
 
@@ -316,10 +266,10 @@ def visualize_stn():
 
 
 if __name__ == '__main__':
-    model = MySTN(inshape=SHAPE).to(device)
+    model = MySTN(inshape=SHAPE, conv_cfg=[8, 8, 8, 'M', 10, 10, 'M']).to(device)
     optimizer = optim.SGD(model.parameters(), lr=0.001)
     loss_func = DiceLoss2D()
-    for epoch in range(1, 20 + 1):
+    for epoch in range(1, 100 + 1):
         run_train(epoch)
         run_test()
     torch.save(model, '/private/medical-src2.x/ai-test/stn2.pth')
