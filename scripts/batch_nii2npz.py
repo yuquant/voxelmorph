@@ -84,6 +84,7 @@ def registration_by_warp():
 
     device = torch.device('cpu')
     # moving_image_path = '/private/voxelmorph/processed_data/output/grid.nii.gz'
+    # moving_image_path = '/private/voxelmorph/processed_data/output/images_1.nii.gz'
     # ref_image_path = '/private/voxelmorph/processed_data/output/images_2.nii.gz'
     # grid_arr_path = '/private/voxelmorph/processed_data/output/1to2warp_bi.npz'
     # output_grid_image_path = '/private/voxelmorph/processed_data/output/images_2_grid.nii.gz'
@@ -95,9 +96,8 @@ def registration_by_warp():
     output_grid_image_path = '/private/voxelmorph/processed_data/output/a001Normal0-images_1-30to1_by_warp.nii.gz'
 
     ref_image_path = '/private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz'
-    # grid_arr_path = '/private/voxelmorph/processed_data/output/chest30to1warp_bi.npz'
+    grid_arr_path = '/private/voxelmorph/processed_data/output/chest30to1warp_bi.npz'
     # grid_arr_path = '/private/voxelmorph/processed_data/output/chest_image_30to1_warp.npz'
-    grid_arr_path = '/private/voxelmorph/processed_data/output/chest_label_30to1warp_norm.npz'
     moving= vxm.py.utils.load_volfile(moving_image_path, add_batch_axis=True, add_feat_axis=True)
     fixed, fixed_affine = vxm.py.utils.load_volfile(ref_image_path, add_batch_axis=True, add_feat_axis=True,
                                                     ret_affine=True)
@@ -117,6 +117,41 @@ def registration_by_warp():
     moved = output.detach().cpu().numpy().squeeze()
     vxm.py.utils.save_volfile(moved, output_grid_image_path, fixed_affine)
 
+
+def cascade_warp():
+    device = torch.device('cpu')
+    moving_image_path = '/private/voxelmorph/processed_data/output/a001Normal0-images_1-30.nii.gz'
+    output_grid_image_path = '/private/voxelmorph/processed_data/output/a001Normal0-images_1-30to1_by_warp.nii.gz'
+
+    ref_image_path = '/private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz'
+    grid_arr_path = '/private/voxelmorph/processed_data/output/chest30to1warp_bi.npz'
+    grid_arr_path2 = '/private/voxelmorph/processed_data/output/chest30to1warp_downsize8.npz'
+    moving= vxm.py.utils.load_volfile(moving_image_path, add_batch_axis=True, add_feat_axis=True)
+    fixed, fixed_affine = vxm.py.utils.load_volfile(ref_image_path, add_batch_axis=True, add_feat_axis=True,
+                                                    ret_affine=True)
+    image_shape = moving.shape[1:]
+    if moving.ndim == 5:
+        image_tensor = torch.from_numpy(moving.astype(np.float32)).float().permute(0, 4, 1, 2, 3).to(device)
+    elif moving.ndim == 4:
+        image_tensor = torch.from_numpy(moving.astype(np.float32)).float().permute(0, 3, 1, 2).to(device)
+
+    grid_arr_4d = np.load(grid_arr_path)['vol']
+    grid_arr_5d = np.reshape(grid_arr_4d, (1, *grid_arr_4d.shape))
+    grid_tensor = torch.tensor(grid_arr_5d.astype(np.float32)).to(device)
+
+    grid_arr_4d2 = np.load(grid_arr_path2)['vol']
+    grid_arr_5d2 = np.reshape(grid_arr_4d2, (1, *grid_arr_4d.shape))
+    grid_tensor2 = torch.tensor(grid_arr_5d2.astype(np.float32)).to(device)
+
+    transform = SpatialTransformer(size=image_shape[:-1])
+    transform.to(device)
+    transform.eval()
+    output = transform(image_tensor, grid_tensor)
+    output = transform(output, grid_tensor2)
+    moved = output.detach().cpu().numpy().squeeze()
+    vxm.py.utils.save_volfile(moved, output_grid_image_path, fixed_affine)
+
+
 def set_space(image, ref_image):
     image.SetOrigin(ref_image.GetOrigin())
     image.SetSpacing(ref_image.GetSpacing())
@@ -125,6 +160,7 @@ def set_space(image, ref_image):
 
 if __name__ == "__main__":
     # nii2nii()
-    registration_by_warp()
+    # registration_by_warp()
+    cascade_warp()
     # make_grid_image()
     # normlize_nii()

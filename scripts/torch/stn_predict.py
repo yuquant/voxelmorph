@@ -35,7 +35,7 @@ def predict(template, target):
     with torch.no_grad():
         net = torch.load('/private/voxelmorph/processed_data/models/train_by_minist/size128.pth', map_location='cpu')
         IMAGE_SIZE = 128
-
+        #
         # net = torch.load('/private/voxelmorph/processed_data/models/chest_label_stn/0199.pt', map_location='cpu')
         # IMAGE_SIZE = 128
 
@@ -65,6 +65,31 @@ def transform(arr):
     return new_arr
 
 
+def show_result(moving, fix, moved):
+
+    f, axarr = plt.subplots(1, 3)
+    axarr[0].imshow(moving)
+    axarr[0].set_title('moving')
+
+    axarr[1].imshow(fix)
+    axarr[1].set_title('fix')
+
+    axarr[2].imshow(moved)
+    axarr[2].set_title('moved')
+
+    plt.ioff()
+    plt.show()
+
+
+def main2():
+    label_image_1 = sitk.ReadImage('/private/voxelmorph/processed_data/output/triangle_label1.nii.gz')
+    labels_1 = sitk.GetArrayFromImage(label_image_1)
+    label_image_2 = sitk.ReadImage('/private/voxelmorph/processed_data/output/triangle_label2.nii.gz')
+    labels_2 = sitk.GetArrayFromImage(label_image_2)
+    moved = predict(labels_1[0], labels_2[0])
+    show_result(labels_1[0], labels_2[0], moved)
+
+
 def main():
 
     label_image = sitk.ReadImage('/data/medical-ai2/Seg2D/胸片分割/preprocess_data/all/a001Normal0/labels__1__alone.nii.gz')
@@ -82,23 +107,12 @@ def main():
     # axarr[2].imshow(transformed_label)
     # axarr[2].set_title('transformed_label')
 
-    template = labels[1]
-    target = labels[30]
-    transformed_label = predict(template, target)
-    f, axarr = plt.subplots(1, 3)
-    axarr[0].imshow(template)
-    axarr[0].set_title('template')
-
-    axarr[1].imshow(target)
-    axarr[1].set_title('real label')
-
-    axarr[2].imshow(transformed_label)
-    axarr[2].set_title('transformed_label')
-
-    plt.ioff()
-    plt.show()
+    template = labels[5]
+    target = labels[36]
+    moved = predict(template, target)
+    show_result(template, target, moved)
     print('finished')
 
 
 if __name__ == "__main__":
-    main()
+    main2()

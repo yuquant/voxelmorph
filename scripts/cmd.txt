@@ -14,17 +14,17 @@ python train.py --datadir /private/voxelmorph/processed_data/train_image_nii --m
 python register.py --moving /private/voxelmorph/processed_data/output/images_1.nii.gz --fixed /private/voxelmorph/processed_data/output/images_2.nii.gz --moved /private/voxelmorph/processed_data/output/images1to2moved.nii.gz --warp /private/voxelmorph/processed_data/output/1to2warp.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney_image/0020.pt
 
 
-python train.py --datadir /private/voxelmorph/processed_data/train_nii --model-dir /private/voxelmorph/processed_data/models/kidney_bidir  --epochs 50 --bidir
-python register.py --moving /private/voxelmorph/processed_data/output/labels_1.nii.gz --fixed /private/voxelmorph/processed_data/output/labels_2.nii.gz --moved /private/voxelmorph/processed_data/output/1to2moved_bi.nii.gz --warp /private/voxelmorph/processed_data/output/1to2warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney_bidir/0050.pt
+python train.py --datadir /private/voxelmorph/processed_data/train_nii --model-dir /private/voxelmorph/processed_data/models/kidney_bidir  --epochs 50 --bidir --int-downsize 8
+python register.py --moving /private/voxelmorph/processed_data/output/labels_1.nii.gz --fixed /private/voxelmorph/processed_data/output/labels_2.nii.gz --moved /private/voxelmorph/processed_data/output/1to2moved.nii.gz --warp /private/voxelmorph/processed_data/output/1to2warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/kidney_bidir/0050.pt
 
 # train chest labels
 python train.py --datadir /private/voxelmorph/processed_data/2dlabels --model-dir /private/voxelmorph/processed_data/models/chest  --epochs 50 --bidir
 python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-30.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.nii.gz --warp /private/voxelmorph/processed_data/output/chest30to1warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest/0200.pt
 
 # train chest images
-python train.py --datadir /private/voxelmorph/processed_data/chest_train_images_npz_norm --model-dir /private/voxelmorph/processed_data/models/chest_image  --epochs 200 --bidir --regex *.npz  --lr 0.00001
+# small grid, larger net, not work, with segmentation will be good
+python train.py --datadir /private/voxelmorph/processed_data/chest_train_images_npz_norm --model-dir /private/voxelmorph/processed_data/models/chest_image  --epochs 100 --bidir --regex *.npz  --lr 0.00001 --int-steps 2 --int-downsize 32 --enc 64 128 256 512 --dec 1024 512 256 128 64
 python register.py --moving /private/voxelmorph/processed_data/output/a001Normal0-images_1-30.npz --fixed /private/voxelmorph/processed_data/output/a001Normal0-images_1-1.npz --moved /private/voxelmorph/processed_data/output/a001Normal0-images_1-30to1.npz --warp /private/voxelmorph/processed_data/output/chest_image_30to1_warp.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_image/0200.pt
-
 
 # train chest labels norm
 # not good
@@ -44,13 +44,27 @@ python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Norm
 
 # train chest labels
 # downsize the grid can control the pix length of each grid coords
-python train.py --datadir /private/voxelmorph/processed_data/2dlabels --model-dir /private/voxelmorph/processed_data/models/chest_weak_limit  --epochs 50 --bidir --int-downsize 8  7
+python train.py --datadir /private/voxelmorph/processed_data/2dlabels --model-dir /private/voxelmorph/processed_data/models/chest_weak_limit  --epochs 50 --bidir --int-downsize 8
 python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-30.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.nii.gz --warp /private/voxelmorph/processed_data/output/chest30to1warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_weak_limit/0050.pt
 
 # train chest labels
-# what is the int-steps for?
+# what is the int-steps for? Smoothing the grid
 python train.py --datadir /private/voxelmorph/processed_data/2dlabels --model-dir /private/voxelmorph/processed_data/models/chest_steps0  --epochs 50 --bidir --int-steps 0 --int-downsize 8
 python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-30.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.nii.gz --warp /private/voxelmorph/processed_data/output/chest30to1warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_steps0/0050.pt
 
+# train chest labels
+# larger downsize
 python train.py --datadir /private/voxelmorph/processed_data/2dlabels --model-dir /private/voxelmorph/processed_data/models/chest_steps5  --epochs 50 --bidir --int-steps 3 --int-downsize 32
 python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-30.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.nii.gz --warp /private/voxelmorph/processed_data/output/chest30to1warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_steps5/0050.pt
+
+# train chest labels
+# larger smooth steps
+python train.py --datadir /private/voxelmorph/processed_data/2dlabels --model-dir /private/voxelmorph/processed_data/models/chest_steps5  --epochs 50 --bidir --int-steps 6 --int-downsize 32
+python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-30.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.nii.gz --warp /private/voxelmorph/processed_data/output/chest30to1warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_steps5/0050.pt
+
+
+# chest label, cascade regiser
+# perfect
+python register.py --moving /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-30.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.nii.gz --warp /private/voxelmorph/processed_data/output/chest30to1warp_bi.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_steps5/0050.pt
+python register.py --moving /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1.nii.gz --fixed /private/voxelmorph/processed_data/2dlabels/a001Normal0-labels__1__alone-1.nii.gz --moved /private/voxelmorph/processed_data/output/chestlabels__1__alone-30to1_downsize8.nii.gz --warp /private/voxelmorph/processed_data/output/chest30to1warp_downsize8.npz -g 0 --model /private/voxelmorph/processed_data/models/chest_weak_limit/0050.pt
+

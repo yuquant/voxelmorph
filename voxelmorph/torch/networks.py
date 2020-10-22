@@ -162,7 +162,9 @@ class VxmDense(LoadableModel):
         self.bidir = bidir
 
         # configure optional integration layer for diffeomorphic warp
+
         down_shape = [int(dim / int_downsize) for dim in inshape]
+        print('grid_shape', down_shape)
         self.integrate = layers.VecInt(down_shape, int_steps) if int_steps > 0 else None
 
         # configure transformer
@@ -211,6 +213,7 @@ class VxmDense(LoadableModel):
         if not registration:
             return (y_source, y_target, preint_flow) if self.bidir else (y_source, preint_flow)
         else:
+            # print('return pos_flow', registration)
             return y_source, pos_flow
 
 
